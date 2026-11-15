@@ -1,169 +1,107 @@
-AMAP 16.12.0.2027 BALANCED NON-ROOT VERIFICATION
-Date: 2026-11-15 Asia/Shanghai
+AMAP 17.03 VOICE + HOME CARD FIX RELEASE VERIFICATION
+DATE=2026-11-15 Asia/Shanghai
+CHANGED_BRANCH=main / amap-v17.03-voice-homefix release
+CHANGED_FIELDS=client version compatibility; GaodeMapPatcher.patchAosResponseBody; CleanHomeFilter.emptyResponse/filterScene; QSScrollContainerV2 188dp clip; Clean6MineFilter.isBlockedTitle; Codex Skill implementation/pitfalls/validation guidance
 
-FOUR ARTIFACT PATHS
-MODIFIED_FILE=C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\outputs\amap-v16.12-balanced-nonroot\Amap_16.12.0.2027_Balanced_NonRoot_Optimized.apk
-DIFF_FILE=C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\outputs\amap-v16.12-balanced-nonroot\Amap_16.12.0.2027_Balanced_NonRoot_Optimized.diff
-VERIFICATION_FILE=C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\outputs\amap-v16.12-balanced-nonroot\VERIFICATION.txt
-ROLLBACK_FILE=C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\outputs\amap-v16.12-balanced-nonroot\ROLLBACK.sh
+FOUR CORE ARTIFACT PATHS
+MODIFIED_FILE=Amap_17.03.0.2008_Voice_HomeFix_NonRoot_Optimized.apk (stored as .7z.001-.003)
+DIFF_FILE=PATCH_DIFF.patch
+VERIFICATION_FILE=VERIFICATION.txt
+ROLLBACK_FILE=ROLLBACK.sh
 
-HASHES AND SIZE
-OFFICIAL_16_12_SHA256=A6ABEBE509B04D9E22122CBBECB0EE86E3755EF4FA87FD1E8EC08DC3EF3196A3
-OFFICIAL_16_12_SIZE=159104271
-MODIFIED_16_12_SHA256=377FBCC407F1F569906FC4D7DF2344A5BC18CBFC2F01994E848A27D5B36B43D8
-MODIFIED_16_12_SIZE=195358950
-PREVIOUS_K60_17_03_SHA256=9B5047002032AA18530CE6AF9DC27B0A8000F23AE452CB64E7387C4AA264FF1B
-PREVIOUS_K60_17_03_SIZE=221612055
-SIZE_REDUCTION_VS_PREVIOUS_K60=26253105 bytes (11.85 percent)
+HASHES
+FINAL_APK_SHA256=D2226C697643BF01B44DA36DADC034005BA69F47AD9BB9A6B301025A0857F60C
+FINAL_APK_BYTES=221616151
+EMBEDDED_OFFICIAL_SHA256=287202D017D27C6BBACB84C658DA9A6CC265655C4CF9E44D878127B50836D15B
+PREVIOUS_17_03_CLEAN8_SHA256=FAE4131C66753F22D9F92C668D856AE6482FAFB043348F978681E6606048C743
+PATCH_DIFF_SHA256=34027053071CD813B738113EDBE8E71ABCDF94D5D13C252B0C30178F37F58D08
 
-INTERMEDIATE VERSION SELECTION
-16.12.0.2027: complete standalone arm64 APK, 159104271 bytes, 67 native-library entries, targetSdk 35; SELECTED.
-16.21.0.2014: Play base APK, 143369499 bytes, zero native-library entries; not standalone.
-16.25.0.2031: Play base APK, 144619980 bytes, zero native-library entries; not standalone.
-Observed historical fix note: 16.10 modified builds explicitly fixed nearby-place positioning. The selected build additionally bypasses the affected nearby endpoints.
+BASELINE
+COMMAND=C:\Users\Administrator\AppData\Local\Programs\ApkStart\resources\runtime\platform-tools\adb.exe -P 5044 -s K60_SERIAL shell uiautomator dump /sdcard/actual_home_regression.xml
+INPUT=K60 with previous 17.03 Clean8 voice-fix build and preserved app data
+LITERAL_RESULT=Home/Company/Frequent/Edit present; weather/recommendation cards rendered below them; weather text included 杭州市 / 16° / 多云.
+EXIT_STATUS=0
+BASELINE_BEHAVIOR_STATUS=Voice command worked, but the home-card suppression had regressed during the 16.12 -> 17.03 migration.
 
-CHANGED BRANCHES / FIELDS
-1. NewMapApplication superclass: android.app.Application -> bin.mt.signature.KillerApplication473 for ordinary non-root installation with embedded official signature data.
-2. AosResponse.getResponseBodyData(): routes AOS response bytes through GaodeMapPatcher.patchAosResponseBody.
-3. GaodeMapPatcher.patchAosResponseBody():
-   - Preserves /ws/aos/main/page/product/list and /shield/dsp/profile/index/nodefaasv3, applying Clean6MineFilter only to those My-page responses.
-   - Removes MineNewVirtualAssetCard, MineNewDoubleRowCard, MineMemberRecommendTaskCard, MineGoodsDisplayCard and PopularActivitiesCard; preserves only MineNewFootprintCard and MineNewBEntranceCard.
-   - Removes nested MineNewBEntranceCard entries by title: Shop Settlement, Map Co-building, Family Map and Map Mini Programs.
-   - Preserves /v1/ai_rec/ for the wake-word assistant.
-   - Preserves /c3frontend/af-nearby/nearby, /shield/search/nearbyrec_smart and /shield/scene/recommend, fixing the K80 nearby loading failure.
-   - Preserves /ws/message/notice/list and /ws/msgbox/pull_mp for the real message center.
-   - CleanMessageFilter scans AOS JSON responses containing dataList and drops new marketing conversation updates matching Super Deals, Loan Service, activities, check-in, reviews, True Detective, public transport, sports and footprint titles. Existing cached conversations remain visible by explicit user choice, avoiding blank rows.
-   - Continues to reject/filter splash, banner, coupon, hotword, recommendation and marketing fields on other endpoints.
-4. AISceneService.isSceneEnable(String): ai_conversation and ai_tab_conversation return false; other AI scenes delegate unchanged. The middle tab falls back to the real Message page while wake-word scenes remain available.
-5. co2.isEnable(): Explore/Nearby bottom tab true -> false.
-6. eo2.isEnable(): redundant bottom Taxi tab true -> false; Home taxi shortcut remains.
-7. SearchBarV2.onAttachedToWindow()/onClick(View): manual voice container is forced GONE and its click returns; QR scan remains.
-8. QSScrollContainerV2 constructor: inner QuickService height is 188dp and clipping is enabled after the fixed shortcut rows plus Home/Company/Frequent/Edit row; the empty local weather shell and later recommendations are clipped.
-9. NewQuickServiceView.onPanelStateChanged(...): EXPANDED is redirected to ANCHORED, preventing weather/recommendation content from being exposed by swiping.
-10. CombineWidgetBuilderManager.setWeatherRestrictWidgetVisible(int): visibility is forced to GONE.
-11. CleanHomeFilter: blocks main-page AIQS/promote responses and preserves only toolsRecommend from scene/recommend, keeping fixed shortcuts while discarding other scene recommendation payloads.
-12. mk6.doBizLogic(), lk6.run(), WeatherRequestHolder.sendInfo(...) and sendMoji(...): return before one-shot weather location and network requests; /weather/v2 and /historyweather are not issued.
-13. AndroidManifest.xml: 19 :widgetProvider components are disabled; AD_ID and REQUEST_INSTALL_PACKAGES are removed. Vendor push services are preserved for taxi/message notifications.
-14. Added assets/origin473.apk and libSignatureKiller473.so; embedded official SHA256 equals OFFICIAL_16_12_SHA256.
+MODIFIED SIGNATURE
+COMMAND=E:\JetBrains Rider 2026.1.2\jbr\bin\java.exe -cp C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\work\amap_clean6_v17\tools\apksigner_33_0_2.jar com.android.apksigner.ApkSignerTool verify --verbose --print-certs C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\work\amap_voice_home_fix\candidate2-optimized.apk
+INPUT=221616151-byte APK SHA256 D2226C697643BF01B44DA36DADC034005BA69F47AD9BB9A6B301025A0857F60C
+LITERAL_OUTPUT=Verifies; v1=true; v2=true; v3=true; signer certificate SHA256=a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc
+EXIT_STATUS=0
 
+MODIFIED ORIGIN
+COMMAND=python -X utf8 verify_overlap_origin.py candidate2-optimized.apk
+LITERAL_OUTPUT=ORIGIN_HEADER_OFFSET=41222759; ORIGIN_DATA_SIZE=179829767; ORIGIN_METHOD=0; EMBEDDED_OFFICIAL_SHA256=287202D017D27C6BBACB84C658DA9A6CC265655C4CF9E44D878127B50836D15B; CLASSES10_PRESENT=True
+EXIT_STATUS=0
 
-BASELINE OFFICIAL 16.12
-COMMAND:
-Get-FileHash -Algorithm SHA256 'C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\work\amap_mid_1612\original\Amap_16.12.0.2027_official.apk'
-& 'E:\JetBrains Rider 2026.1.2\jbr\bin\java.exe' -jar 'C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\work\amap_clean6_v17\tools\apksigner_33_0_2.jar' verify --verbose --print-certs 'C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\work\amap_mid_1612\original\Amap_16.12.0.2027_official.apk'
-INPUT:
-159104271-byte official APK.
-LITERAL OUTPUT / RESULT:
-SHA256=A6ABEBE509B04D9E22122CBBECB0EE86E3755EF4FA87FD1E8EC08DC3EF3196A3
-Verifies
-Verified using v1 scheme (JAR signing): true
-Verified using v2 scheme (APK Signature Scheme v2): true
-Verified using v3 scheme (APK Signature Scheme v3): true
-Signer #1 certificate SHA-256 digest: b36c0b80cb2417e7fe4c3df01a2d163a7d8443604dd276a2bc1ab0d325102e3e
-EXIT STATUS: 0
-BASELINE STATUS: official package contains Explore, AI Conversation and bottom Taxi tabs, manual SearchBar voice, weather/recommendation panel, enabled desktop widgets, AD_ID and REQUEST_INSTALL_PACKAGES.
+MODIFIED INSTALL
+COMMAND=C:\Users\Administrator\AppData\Local\Programs\ApkStart\resources\runtime\platform-tools\adb.exe -P 5044 -s K60_SERIAL install -r --no-streaming candidate2-optimized.apk
+LITERAL_OUTPUT=1 file pushed, 0 skipped. 41.9 MB/s (221616151 bytes in 5.041s) / Performing Push Install / Success
+EXIT_STATUS=0
 
-MODIFIED BUILD
-COMMAND:
-& 'E:\JetBrains Rider 2026.1.2\jbr\bin\java.exe' -jar 'C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\work\amap_mod\tools\apktool_3.0.3.jar' b 'C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\work\amap_mid_1612\decompiled' -o 'C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\work\amap_mid_1612\Amap_16.12.0.2027_balanced13-unsigned.apk'
-INPUT:
-Modified copy of the decoded official 16.12 source.
-LITERAL OUTPUT / RESULT:
-I: Smaling smali_classes4 folder into classes4.dex...
-I: Built apk into: work\amap_mid_1612\Amap_16.12.0.2027_balanced13-unsigned.apk
-EXIT STATUS: 0
+HOME COLD START
+COMMAND=adb -P 5044 -s K60_SERIAL shell am start -W -n com.autonavi.minimap/com.autonavi.map.activity.SplashActivity
+LITERAL_OUTPUT=Status: ok; LaunchState: COLD; Activity: com.autonavi.minimap/com.autonavi.map.activity.NewMapActivity; TotalTime: 340; WaitTime: 342; Complete
+LITERAL_UI_RESULT=回家=1; 去单位=1; 常去地点=1; 编辑=1; 天气=0; 16°=0; 多云=0; 推荐=0; 猜你喜欢=0; 首页=1; 我的=1
+EXIT_STATUS=0
 
-MODIFIED SIGNATURE / ORIGIN VERIFICATION
-COMMAND:
-& 'E:\JetBrains Rider 2026.1.2\jbr\bin\java.exe' -jar 'C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\work\amap_clean6_v17\tools\apksigner_33_0_2.jar' verify --verbose --print-certs 'C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\outputs\amap-v16.12-balanced-nonroot\Amap_16.12.0.2027_Balanced_NonRoot_Optimized.apk'
-python 'C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\work\amap_clean6_v17\verify_overlap_origin.py' 'C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\outputs\amap-v16.12-balanced-nonroot\Amap_16.12.0.2027_Balanced_NonRoot_Optimized.apk'
-INPUT:
-195358950-byte modified APK, SHA256 377FBCC407F1F569906FC4D7DF2344A5BC18CBFC2F01994E848A27D5B36B43D8.
-LITERAL OUTPUT / RESULT:
-Verifies
-Verified using v1 scheme (JAR signing): true
-Verified using v2 scheme (APK Signature Scheme v2): true
-Verified using v3 scheme (APK Signature Scheme v3): true
-Number of signers: 1
-Signer #1 certificate SHA-256 digest: a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc
-ORIGIN_HEADER_OFFSET=35795696
-ORIGIN_DATA_SIZE=159104271
-ORIGIN_METHOD=0
-EMBEDDED_OFFICIAL_SHA256=A6ABEBE509B04D9E22122CBBECB0EE86E3755EF4FA87FD1E8EC08DC3EF3196A3
-EXIT STATUS: 0
+HOME SWIPE
+COMMAND=adb -P 5044 -s K60_SERIAL shell input swipe 540 2050 540 950 700
+LITERAL_UI_RESULT=回家=1; 去单位=1; 常去地点=1; 天气=0; 16°=0; 多云=0; 推荐=0; 猜你喜欢=0; 首页=1; 我的=1
+EXIT_STATUS=0
 
-MODIFIED K60 INSTALL
-COMMAND:
-& 'C:\Users\Administrator\AppData\Local\Programs\ApkStart\resources\runtime\platform-tools\adb.exe' -P 5044 -s 9289751c install -r --no-streaming 'C:\Users\Administrator\Documents\Codex\2026-11-15\new-chat\work\amap_mid_1612\Amap_16.12.0.2027_balanced13-optimized.apk'
-INPUT:
-195358950-byte APK, SHA256 377FBCC407F1F569906FC4D7DF2344A5BC18CBFC2F01994E848A27D5B36B43D8.
-LITERAL OUTPUT / RESULT:
-1 file pushed, 0 skipped. 41.0 MB/s (195358950 bytes in 4.549s)
-Performing Push Install
-Success
-EXIT STATUS: 0
-DEVICE BASE APK SHA256=377fbcc407f1f569906fc4d7df2344a5bc18cbfc2f01994e848a27d5b36b43d8
-DEVICE VERSION=16.12.0.2027 (161200), targetSdk=35
+MINE REGRESSION
+LITERAL_UI_RESULT=订单=1; 收藏=1; 待评价=1; 钱包卡券=1; 足迹=1; 店铺入驻=0; 地图共建=0; 家人地图=0; 地图小程序=0; 互动专区=0; 高德超划算=0; 借钱=0; 借钱服务=0; 真探=0
+EXIT_STATUS=0
 
-K60 UI / FUNCTION RESULT
-HOME TABS: Home, Message, Mine.
-EXPLORE TAB: absent.
-AI CONVERSATION TAB: absent.
-BOTTOM TAXI TAB: absent; Home taxi shortcut present.
-MANUAL SEARCHBAR VOICE: absent; QR scan present.
-FIXED QUICK SERVICES: present.
-HOME / COMPANY / FREQUENT / EDIT: present behind the stable 188dp boundary.
-WEATHER: absent; weather endpoint/log matches=0; weather request methods return before one-shot location and network dispatch.
-RECOMMENDATION FEED: absent before and after swipe-up.
-NEARBY TEST INPUT: search history POI "金昌·春和钱塘", then tap "搜周边".
-NEARBY LITERAL RESULT: NEARBY_LOAD_FAILURE=0; NEARBY_RETRY=0; NEARBY_FOOD=2; NEARBY_HOTEL=1; NEARBY_1KM=1.
-MESSAGE RESULT: real Message page; cached Super Deals=1, Loan Service=1 and True Detective=1 remain displayed by user choice; new matching network updates are dropped by CleanMessageFilter. Taxi conversation=1; Order reminder=1; voice-panel count=0; no blank rows.
-KNOWN MESSAGE LIMIT: one newer message type displays "你收到的消息该版本不支持展示，请升级至新版"; taxi conversation and driver arrival notification display normally.
-MINE RESULT: Footprint=1; Orders=1; Favorites=1; Pending Review=1; Wallet=1. Voice Pack=0; Car Logo=0; Rent Car=0; Sell Car=0; Loan=0; Interactive Zone=0; Talent Tasks=0; My Car marketing card=0; Shop Settlement=0; Map Co-building=0; Family Map=0; Map Mini Programs=0. Second-page swipe reconfirmed all four requested entries remain absent.
-WAKE-WORD RESULT: RECORD_AUDIO allow and running.
-PROCESSES: com.autonavi.minimap and com.autonavi.minimap:locationservice only; no :widgetProvider process.
-CRASH RESULT: no FATAL EXCEPTION, ANR, VerifyError, NoClassDefFoundError or UnsatisfiedLinkError.
-EXIT STATUS: 0
+VOICE REGRESSION
+SOURCE_RESULT=/v1/ai_rec/ returns original response bytes before home/message filters.
+RUNTIME_RESULT=RECORD_AUDIO allow and observed running.
+E2E_RESULT_FROM_VOICE_FIX_STAGE=questionText 导航去公司; sceneType ai_native; msgStatus valid; result 0; agent_intent sdm; company route page opened.
+RESULT=Home-card changes do not disable the repaired 17.03 KWS/VUI command path.
 
-K60 PERFORMANCE RESULT
-COLD START COMMAND: five repetitions of adb shell am force-stop followed by adb shell am start -W -n com.autonavi.minimap/com.autonavi.map.activity.SplashActivity.
-LITERAL OUTPUT / RESULT:
-START_MS samples=341,335,363,328,343 avg=342.0 median=341 min=328 max=363
-PACKAGE_PROCESS_COUNT=2 PACKAGE_PSS_KB=879781 PACKAGE_RSS_KB=1203376
-PREVIOUS 17.03 COMPARISON: avg cold start 343.2ms; PSS 1192887KB; RSS 1506756KB; settled CPU 30.5 percent of one core.
-RESULT: final 16.12 cold-start is effectively equal to the previous 17.03 run (342.0ms vs 343.2ms), while using about 26.2 percent less PSS and 20.1 percent less RSS.
-EXIT STATUS: 0
-
-ROLLBACK COPY TEST
-COMMAND:
-& 'C:\Program Files\Git\bin\bash.exe' -lc "'/c/Users/Administrator/Documents/Codex/2026-11-15/new-chat/outputs/amap-v16.12-balanced-nonroot/ROLLBACK.sh' --test-copy '/c/Users/Administrator/Documents/Codex/2026-11-15/new-chat/work/amap_mid_1612/rollback-test.apk'"
-INPUT:
-Separate copy of MODIFIED_FILE.
-LITERAL OUTPUT / RESULT:
-ROLLBACK_BEFORE_SHA256=377FBCC407F1F569906FC4D7DF2344A5BC18CBFC2F01994E848A27D5B36B43D8
-ROLLBACK_AFTER_SHA256=A6ABEBE509B04D9E22122CBBECB0EE86E3755EF4FA87FD1E8EC08DC3EF3196A3
-ROLLBACK_RESULT=PASS
-EXIT STATUS: 0
-RESTORED BEHAVIOR / STATUS: rollback test copy is byte-identical to official 16.12, restoring official tabs, manual voice, weather/recommendations, widget components and permissions. MODIFIED_FILE remains changed and K60 remains on the modified balanced build.
-
-FINAL RESULT
-BUILD=PASS
-SIGNATURE=PASS (v1/v2/v3)
-EMBEDDED_OFFICIAL=PASS
-ORDINARY_NON_ROOT_INSTALL=PASS
-NEARBY_LOADING=PASS
-REAL_MESSAGE_PAGE=PASS_WITH_ONE_NEW_FORMAT_LIMIT
-WAKE_WORD_AUDIO_PIPELINE=ACTIVE
-HOME_FEED_HIDDEN=PASS
-WEATHER_HIDDEN=PASS
-WEATHER_REQUESTS_DISABLED=PASS
-HOME_COMPANY_FREQUENT_EDIT=PRESENT
-MESSAGE_MARKETING_NEW_UPDATES=FILTERED
-MESSAGE_MARKETING_CACHED_ROWS=VISIBLE_BY_USER_CHOICE
-WIDGET_PROCESS=ABSENT
-MINE_FUNCTION_CARDS=2
-MINE_MARKETING_CARDS=0
+INSTALLED HASH
+COMMAND=adb -P 5044 -s K60_SERIAL pull /data/app/.../com.autonavi.minimap.../base.apk INSTALLED_BASE.apk
+LITERAL_RESULT=INSTALLED_BYTES=221616151; INSTALLED_SHA256=D2226C697643BF01B44DA36DADC034005BA69F47AD9BB9A6B301025A0857F60C
+EXIT_STATUS=0
+CRASH_SCAN=No AMap FATAL EXCEPTION, ANR, VerifyError, NoClassDefFoundError or UnsatisfiedLinkError after a clean launch.
 PHONE_REBOOT_PERFORMED=NO
+
+ARCHIVE AND SPLIT
+ARCHIVE_BYTES=203145935
+ARCHIVE_SHA256=D7037D095590330CB9859163975C9348C2B4BE532954669D0ADF70BC4435D4F2
+PART_001_BYTES=94371840
+PART_001_SHA256=4A31CCBC6959D177DA28ACAF37391A557453FAB796DBA98D8203A9A780BB153A
+PART_002_BYTES=94371840
+PART_002_SHA256=2D65671C082C575C46A7C72D1C929B78D289669791E0157BB638FFD72C5C99A2
+PART_003_BYTES=14402255
+PART_003_SHA256=0873D5DD0F3188037BBB88F3B52363A2BD880FEC661A5746BDC542F314CFA7DD
+COMMAND=concatenate .001-.003, open with py7zr, extract APK, calculate SHA-256
+LITERAL_RESULT=ARCHIVE_SHA256=D7037D095590330CB9859163975C9348C2B4BE532954669D0ADF70BC4435D4F2; REASSEMBLED_SHA256=D7037D095590330CB9859163975C9348C2B4BE532954669D0ADF70BC4435D4F2; EXTRACTED_BYTES=221616151; EXTRACTED_SHA256=D2226C697643BF01B44DA36DADC034005BA69F47AD9BB9A6B301025A0857F60C; ARCHIVE_VERIFICATION=PASS
+EXIT_STATUS=0
+
+SKILL VALIDATION
+COMMAND=python -X utf8 quick_validate.py Codex-Skill/amap-apk-customization
+LITERAL_OUTPUT=Skill is valid!
+EXIT_STATUS=0
+
+ROLLBACK
+COMMAND="C:\Program Files\Git\bin\bash.exe" ROLLBACK.sh --test-copy PREVIOUS_17_03_CLEAN8.apk repo-rollback-test.apk
+INPUT=Independent copy; previous APK SHA256 FAE4131C66753F22D9F92C668D856AE6482FAFB043348F978681E6606048C743
+LITERAL_OUTPUT=ROLLBACK_BEFORE_SHA256=D2226C697643BF01B44DA36DADC034005BA69F47AD9BB9A6B301025A0857F60C / ROLLBACK_AFTER_SHA256=FAE4131C66753F22D9F92C668D856AE6482FAFB043348F978681E6606048C743 / ROLLBACK_RESULT=PASS
+EXIT_STATUS=0
+RESTORED_BEHAVIOR_STATUS=Independent rollback copy is byte-identical to the previous 17.03 Clean8 voice-fix build, restoring its working voice command and its home-card regression. The final package and K60 remain on the corrected build.
+
+FINAL_RESULT
+BUILD=PASS
+SIGNATURE=PASS_V1_V2_V3
+EMBEDDED_OFFICIAL=PASS
+NON_ROOT_INSTALL=PASS
+VOICE_COMMAND=PASS
+HOME_FIXED_ROW=PRESENT
+HOME_WEATHER_RECOMMENDATION_CARDS=ABSENT_COLD_AND_SWIPE
+MINE_REQUIRED_ENTRIES=PRESENT
+MINE_REMOVED_ENTRIES=ABSENT
+INSTALLED_HASH_MATCH=PASS
+ARCHIVE_REASSEMBLY_AND_EXTRACTION=PASS
 ROLLBACK_COPY=PASS
-K60_CURRENT_PACKAGE=AMAP_16.12.0.2027_BALANCED_NONROOT
-K60_CURRENT_SHA256=377FBCC407F1F569906FC4D7DF2344A5BC18CBFC2F01994E848A27D5B36B43D8

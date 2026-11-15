@@ -23,12 +23,15 @@
 - Weather UI removal alone does not stop one-shot location or weather requests.
 - Message server filtering does not erase old AJX/account cache. A render-time hide can leave blank positions; do not use it when the user prefers a continuous list.
 - A broad URL reject can break nearby loading. Preserve or selectively filter nearby endpoints and retest a known POI's `搜周边` flow.
+- A successful `你好高德` response followed by `当前版本已不再支持 AI 对话` can be a server-side client-version rejection. Verify the stored voice task: working KWS/ASR may coexist with a rejected command. Move to an accepted client protocol and preserve `/v1/ai_rec/`; changing the displayed error text does not restore command execution.
+- Moving from 16.12 to 17.03 without porting `CleanHomeFilter` and the QuickService clip restores cached weather/recommendation cards even when panel expansion and weather orchestration remain disabled.
 
 ## Functional tradeoffs
 
 - Disabling all vendor push services can delay driver chat and order reminders when AMap is backgrounded.
 - A 16.x client may not render some new-format messages even when the message center itself works.
 - Continuous wake-word audio remains a battery cost. Disabling the manual mic does not stop the wake-word pipeline.
+- `appops RECORD_AUDIO=allow/running` proves the audio pipeline is active, not that a spoken navigation command executed. Inspect the new `ai_native` task and destination UI.
 - Physical deletion of shared code can break reflection and plugin registries while saving little in an embedded-origin overlap package.
 
 ## Stopping conditions

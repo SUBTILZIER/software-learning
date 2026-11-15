@@ -11,7 +11,7 @@ Use this skill for 高德地图 APK version selection, reverse analysis, slimmin
 
 - Preserve the official APK and its SHA-256; modify a decoded copy.
 - Prefer selective data/request filtering over deleting shared navigation code or merely hiding rendered views.
-- Preserve the user-selected core flows. Unless the current request says otherwise, verify map/search/navigation, fixed shortcuts, nearby search, genuine messages/taxi chat, favorites/orders, and the wake-word assistant.
+- Preserve the user-selected core flows. Unless the current request says otherwise, verify map/search/navigation, fixed shortcuts, nearby search, genuine messages/taxi chat, favorites/orders, and an executed wake-word command rather than only microphone activity.
 - Produce a signed installable APK plus source diff, verification record, and executable rollback script.
 - Test the exact delivered hash on the named device. Do not reboot a phone merely for an ordinary APK/UI change.
 
@@ -28,6 +28,7 @@ Use this skill for 高德地图 APK version selection, reverse analysis, slimmin
 - **Request stop when unused:** if a feature is unwanted and has its own request entry point, return before one-shot location or network dispatch. Hiding a card alone does not remove request cost.
 - **View clipping is a fallback:** use it only for a local AJX shell that remains after its payload/request is removed. Choose the boundary from measured UI bounds and retest large/small state variants.
 - **Cached versus new data:** distinguish server responses, local cache, and rendered rows. A network filter may not remove old cached content. Do not add a UI filter that leaves blank rows when the user prefers cached rows to remain visible.
+- **Version compatibility:** a wake word can still answer while the server rejects the following command as an unsupported AI-dialogue client. Treat that as a client/server protocol-version result, not as proof that KWS, ASR, or permissions failed.
 - **Universal versus device-specific:** keep vendor push services for a universal build when real taxi/message notifications matter. Disabling non-current OEM push is appropriate only for an explicitly device-specific build.
 - **Avoid physical module deletion by default:** reflection, plugin registration, native libraries, and the embedded-official signature layer make apparent dead code risky and size savings smaller than expected.
 

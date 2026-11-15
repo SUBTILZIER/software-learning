@@ -20,7 +20,7 @@ Inspect size, version, dex entries, native libraries, and signing certificate be
 - Prefer the lightest complete version that contains the required navigation/message features and targets a current Android API.
 - The official AMap certificate observed in the 16.x line had SHA-256 `b36c0b80cb2417e7fe4c3df01a2d163a7d8443604dd276a2bc1ab0d325102e3e`; verify rather than assuming it is permanent.
 
-The 16.12.0.2027 case was a useful balance: complete arm64 package, target SDK 35, materially smaller runtime than 17.03, and newer than the 16.01 build whose nearby flow failed under an old filter.
+The 16.12.0.2027 case was a useful balance for size and nearby behavior, but a later live test showed that the wake word could answer while the server returned `当前版本已不再支持 AI 对话` for commands such as `导航去公司`. When voice-command execution is required, prefer a currently accepted client line such as the tested 17.03.0.2008 build rather than spoofing the returned text.
 
 ## Non-root signature architecture
 
@@ -85,6 +85,10 @@ Names are less obfuscated in the tested build:
 - `NewQuickServiceView.onPanelStateChanged(...)`
 - `CombineWidgetBuilderManager.setWeatherRestrictWidgetVisible(int)`
 - `QSScrollContainerV2`
+- `smali_classes10/com/rikkati/mod/GaodeMapPatcher.smali`
+- `smali_classes10/com/rikkati/mod/CleanHomeFilter.smali`
+
+In the tested non-root 17.03 build, `QSScrollContainerV2` was in `smali_classes5`. The 188dp clipped inner container preserved fixed quick tools plus Home/Company/Frequent/Edit on the K60 while preventing cached weather/recommendation cards from rendering below them.
 
 Do not transplant paths blindly. Search by interface, endpoint, scene name, or visible behavior on each version.
 
@@ -105,7 +109,7 @@ Observed marketing/optional cards included:
 
 The 17.03 line used related names with suffixes such as `V2`, `V3`, or `V5`; support both families when one filter is reused.
 
-Nested `MineNewBEntranceCard.entranceList` can be filtered by exact title. Observed removable entries included 店铺入驻, 地图共建, 家人地图, and 地图小程序. Keep titles requested by the user, such as 订单, 收藏, 待评价, or 钱包卡券.
+Nested `MineNewBEntranceCard.entranceList` can be filtered by exact title. Observed removable entries included 店铺入驻, 地图共建, 家人地图, 地图小程序, 借钱, 借钱服务, 高德超划算, 高德真探运营官, and 真探运营官. Keep titles requested by the user, such as 订单, 收藏, 待评价, or 钱包卡券.
 
 Measured effect in the case study: seven cards and a 63,377-byte cached JSON payload became two cards and a 2,349-byte payload.
 
@@ -118,6 +122,10 @@ Use three layers in this order:
 3. **View fallback:** if the AJX bundle still draws a local empty weather shell, clip below the fixed shortcuts plus Home/Company/Frequent/Edit row. In the tested 16.12 layout, 188dp retained that row; 150dp hid it.
 
 Keep the panel anchored when the user does not want expandable feed content.
+
+When migrating a working 16.12 customization to 17.03, port both the response filter and the view clip. The earlier Clean8 build only stopped expansion and selected requests; an in-place upgrade with preserved data rendered cached weather/recommendation cards again. The corrected 17.03 build returned empty data for main-page AI/promote/weather endpoints, retained only `toolsRecommend` from `/shield/scene/recommend`, and clipped the inner QuickService container at 188dp. Cold-start and upward-swipe checks both kept Home/Company/Frequent/Edit present while weather/recommendation counts stayed zero.
+
+Always return the original bytes for `/v1/ai_rec/`. This endpoint carried the working 17.03 voice-command flow and must not pass through home or message filters.
 
 ## Message filtering and local cache
 

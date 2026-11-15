@@ -53,6 +53,9 @@ At minimum test the requested subset of:
 - a known POI detail followed by `搜周边` (no loading failure);
 - QR/camera if retained;
 - wake-word permission and active audio pipeline.
+- a fresh spoken command such as `导航去公司`, with the new `ai_native` task marked valid and the route page opened; do not treat `RECORD_AUDIO` alone as command success.
+
+For home-card regressions, record text counts before and after a cold start and an upward swipe. A verified 17.03 result kept `回家/去单位/常去地点/编辑=1` and `天气/推荐/猜你喜欢=0` in both states.
 
 Use UIAutomator dumps for counts and bounds. Do not publish private text or map screenshots.
 

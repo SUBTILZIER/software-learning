@@ -1,0 +1,947 @@
+# AMap 17.03 voice-preserving home-card regression fix
+# Baseline SHA256: FAE4131C66753F22D9F92C668D856AE6482FAFB043348F978681E6606048C743
+# Modified SHA256: D2226C697643BF01B44DA36DADC034005BA69F47AD9BB9A6B301025A0857F60C
+# Data layer: empty home AI/promote/weather payloads; preserve toolsRecommend; preserve /v1/ai_rec/ unchanged.
+# View layer: clip QSScrollContainerV2 at 188dp so old cached cards cannot render below Home/Company/Frequent/Edit.
+
+--- a/smali_classes10/com/rikkati/mod/GaodeMapPatcher.smali
++++ b/smali_classes10/com/rikkati/mod/GaodeMapPatcher.smali
+@@ -13852,11 +13852,11 @@
+
+     move-object/from16 v7, p0
+
+-    if-eqz v7, :cond_a
++    if-eqz v7, :cond_7
+
+     array-length v0, v7
+
+-    if-eqz v0, :cond_a
++    if-eqz v0, :cond_7
+
+     if-nez v8, :cond_0
+
+@@ -13872,17 +13872,94 @@
+     return-object v7
+
+     :cond_1
++    invoke-static {v7}, Lcom/rikkati/mod/CleanMessageFilter;->filter([B)[B
++
++    move-result-object v7
++
++    const-string v1, "/ws/faas/amap-navigation/main-page-aiqs"
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v1
++
++    if-nez v1, :clean_home_empty
++
++    const-string v1, "/ws/promote/main-page/assets"
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v1
++
++    if-nez v1, :clean_home_empty
++
++    const-string v1, "/ws/promote/main-page/location"
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v1
++
++    if-nez v1, :clean_home_empty
++
++    const-string v1, "/ws/valueadded/weather/v2"
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v1
++
++    if-nez v1, :clean_home_empty
++
++    const-string v1, "/ws/render/weatherservice/historyweather"
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v1
++
++    if-nez v1, :clean_home_empty
++
++    const-string v1, "/ws/amc/server/conv/raise_list"
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v1
++
++    if-eqz v1, :clean_check_mine_product
++
++    invoke-static {v7}, Lcom/rikkati/mod/CleanMessageFilter;->filter([B)[B
++
++    move-result-object v1
++
++    return-object v1
++
++    :clean_home_empty
++    invoke-static {}, Lcom/rikkati/mod/CleanHomeFilter;->emptyResponse()[B
++
++    move-result-object v1
++
++    return-object v1
++
++    :clean_check_mine_product
++    const-string v1, "/ws/aos/main/page/product/list"
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v1
++
++    if-eqz v1, :clean6_check_profile
++
+     invoke-static {v7}, Lcom/rikkati/mod/Clean6MineFilter;->filter([B)[B
+
+-    move-result-object v7
+-
+-    const-string v1, "/ws/aos/main/page/product/list"
++    move-result-object v1
++
++    return-object v1
++
++    :clean6_check_profile
++    const-string v1, "/shield/dsp/profile/index/nodefaasv3"
+
+     invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+     move-result v1
+
+-    if-eqz v1, :cond_2
++    if-eqz v1, :clean6_check_ai
+
+     invoke-static {v7}, Lcom/rikkati/mod/Clean6MineFilter;->filter([B)[B
+
+@@ -13890,33 +13967,66 @@
+
+     return-object v1
+
+-    :cond_2
+-    const-string v1, "/shield/dsp/profile/index/nodefaasv3"
++    :clean6_check_ai
++    const-string v1, "/v1/ai_rec/"
+
+     invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+     move-result v1
+
+-    if-eqz v1, :cond_3
+-
+-    invoke-static {v7}, Lcom/rikkati/mod/Clean6MineFilter;->filter([B)[B
++    if-eqz v1, :clean6_continue_filter
++
++    :clean6_return_original
++    return-object v7
++
++    :clean6_continue_filter
++    const-string v1, "/c3frontend/af-nearby/nearby"
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v1
++
++    if-nez v1, :clean6_return_original
++
++    const-string v1, "/shield/search/nearbyrec_smart"
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v1
++
++    if-nez v1, :clean6_return_original
++
++    const-string v1, "/shield/scene/recommend"
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v1
++
++    if-eqz v1, :clean6_check_notice
++
++    invoke-static {v7}, Lcom/rikkati/mod/CleanHomeFilter;->filterScene([B)[B
+
+     move-result-object v1
+
+     return-object v1
+
+-    :cond_3
+-    const-string v1, "/v1/ai_rec/"
++    :clean6_check_notice
++    const-string v1, "/ws/message/notice/list"
+
+     invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+
+     move-result v1
+
+-    if-eqz v1, :cond_4
+-
+-    return-object v7
+-
+-    :cond_4
++    if-nez v1, :clean6_return_original
++
++    const-string v1, "/ws/msgbox/pull_mp"
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v1
++
++    if-nez v1, :clean6_return_original
++
+     invoke-static {}, Lcom/rikkati/mod/GaodeMapPatcher;->h()Ljava/util/Set;
+
+     move-result-object v1
+@@ -13930,7 +14040,7 @@
+
+     move-result v2
+
+-    if-eqz v2, :cond_6
++    if-eqz v2, :cond_3
+
+     invoke-static {v1}, Lcom/rikkati/mod/b;->m(Ljava/lang/Object;)Ljava/lang/Object;
+
+@@ -13946,7 +14056,7 @@
+
+     move-result v3
+
+-    if-eqz v3, :cond_5
++    if-eqz v3, :cond_2
+
+     new-instance v1, Ljava/lang/StringBuilder;
+
+@@ -13984,19 +14094,19 @@
+
+     return-object v1
+
+-    :cond_5
++    :cond_2
+     goto :goto_0
+
+-    :cond_6
++    :cond_3
+     invoke-static {v0}, Lcom/rikkati/mod/GaodeMapPatcher;->i(Ljava/lang/Object;)Lcom/rikkati/mod/GaodeMapPatcher$JsonModifier;
+
+     move-result-object v1
+
+-    if-nez v1, :cond_7
++    if-nez v1, :cond_4
+
+     return-object v7
+
+-    :cond_7
++    :cond_4
+     :try_start_0
+     invoke-static {v8}, Lcom/rikkati/mod/GaodeMapPatcher;->k(Ljava/lang/Object;)Ljava/nio/charset/Charset;
+
+@@ -14014,7 +14124,7 @@
+
+     move-result v5
+
+-    if-nez v5, :cond_9
++    if-nez v5, :cond_6
+
+     invoke-static {}, Lcom/rikkati/mod/d;->e()Ljava/lang/String;
+
+@@ -14024,11 +14134,11 @@
+
+     move-result v5
+
+-    if-nez v5, :cond_8
++    if-nez v5, :cond_5
+
+     goto :goto_1
+
+-    :cond_8
++    :cond_5
+     new-instance v5, Lorg/json/JSONObject;
+
+     invoke-direct {v5, v4}, Lorg/json/JSONObject;-><init>(Ljava/lang/String;)V
+@@ -14047,7 +14157,7 @@
+
+     return-object v6
+
+-    :cond_9
++    :cond_6
+     :goto_1
+     return-object v7
+
+@@ -14094,7 +14204,7 @@
+
+     return-object v7
+
+-    :cond_a
++    :cond_7
+     :goto_2
+     return-object v7
+ .end method
+--- a/smali_classes10/com/rikkati/mod/Clean6MineFilter.smali
++++ b/smali_classes10/com/rikkati/mod/Clean6MineFilter.smali
+@@ -15,11 +15,11 @@
+ .method public static filter([B)[B
+     .locals 3
+
+-    if-eqz p0, :cond_0
++    if-eqz p0, :return_original
+
+     array-length v0, p0
+
+-    if-eqz v0, :cond_0
++    if-eqz v0, :return_original
+
+     :try_start_0
+     sget-object v0, Ljava/nio/charset/StandardCharsets;->UTF_8:Ljava/nio/charset/Charset;
+@@ -44,90 +44,144 @@
+     :try_end_0
+     .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
+
+-    goto :goto_0
++    goto :return_original
+
+     :catch_0
+     move-exception v0
+
+-    :cond_0
+-    :goto_0
++    :return_original
+     return-object p0
+ .end method
+
+ .method private static isBlocked(Ljava/lang/String;)Z
+     .locals 1
+
++    const-string v0, "MineNewVirtualAssetCard"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const-string v0, "MineNewDoubleRowCard"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const-string v0, "MineMemberRecommendTaskCard"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const-string v0, "MineGoodsDisplayCard"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const-string v0, "PopularActivitiesCard"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
++
+     const-string v0, "MineNewVirtualAssetCardV3"
+-
+-    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_0
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
+
+     const-string v0, "UserCircleCard"
+-
+-    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_0
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
+
+     const-string v0, "MineMemberRecommendTaskCardV2"
+-
+-    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_0
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
+
+     const-string v0, "MineUserEmblemPopup"
+-
+-    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_0
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
+
+     const-string v0, "UserCircleCardV3"
+-
+-    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_0
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
+
+     const-string v0, "PopularActivitiesCardV5"
+-
+-    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_0
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
+
+     const-string v0, "ContentCenterFeedCard"
+-
+-    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_0
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
+
+     const-string v0, "PopularActivitiesCardV2"
+-
+-    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+-
+-    move-result v0
+-
+-    if-nez v0, :cond_0
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked
+
+     const/4 v0, 0x0
+-
+-    return v0
+-
+-    :cond_0
++    return v0
++
++    :blocked
+     const/4 v0, 0x1
+-
++    return v0
++.end method
++
++.method private static isBlockedTitle(Ljava/lang/String;)Z
++    .locals 1
++
++    const-string v0, "店铺入驻"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked_title
++
++    const-string v0, "地图共建"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked_title
++
++    const-string v0, "家人地图"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked_title
++
++    const-string v0, "地图小程序"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked_title
++
++    const-string v0, "借钱"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked_title
++
++    const-string v0, "借钱服务"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked_title
++
++    const-string v0, "高德超划算"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked_title
++
++    const-string v0, "高德真探运营官"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked_title
++
++    const-string v0, "真探运营官"
++    invoke-virtual {v0, p0}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
++    move-result v0
++    if-nez v0, :blocked_title
++
++    const/4 v0, 0x0
++    return v0
++
++    :blocked_title
++    const/4 v0, 0x1
+     return v0
+ .end method
+
+@@ -135,63 +189,58 @@
+     .locals 4
+
+     invoke-virtual {p0}, Lorg/json/JSONArray;->length()I
+-
+-    move-result v0
+-
++    move-result v0
+     add-int/lit8 v0, v0, -0x1
+
+-    :goto_0
+-    if-ltz v0, :cond_3
++    :loop
++    if-ltz v0, :done
+
+     invoke-virtual {p0, v0}, Lorg/json/JSONArray;->opt(I)Ljava/lang/Object;
+-
+     move-result-object v1
+
+     instance-of v2, v1, Lorg/json/JSONObject;
+-
+-    if-eqz v2, :cond_1
++    if-eqz v2, :check_array
+
+     check-cast v1, Lorg/json/JSONObject;
+
++    const-string v2, "title"
++    const-string v3, ""
++    invoke-virtual {v1, v2, v3}, Lorg/json/JSONObject;->optString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
++    move-result-object v2
++    invoke-static {v2}, Lcom/rikkati/mod/Clean6MineFilter;->isBlockedTitle(Ljava/lang/String;)Z
++    move-result v2
++    if-eqz v2, :check_data_key
++
++    invoke-virtual {p0, v0}, Lorg/json/JSONArray;->remove(I)Ljava/lang/Object;
++    goto :next
++
++    :check_data_key
+     const-string v2, "dataKey"
+-
+     const-string v3, ""
+-
+     invoke-virtual {v1, v2, v3}, Lorg/json/JSONObject;->optString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+-
+     move-result-object v2
+-
+     invoke-static {v2}, Lcom/rikkati/mod/Clean6MineFilter;->isBlocked(Ljava/lang/String;)Z
+-
+     move-result v2
+-
+-    if-eqz v2, :cond_0
++    if-eqz v2, :recurse_object
+
+     invoke-virtual {p0, v0}, Lorg/json/JSONArray;->remove(I)Ljava/lang/Object;
+-
+-    goto :goto_1
+-
+-    :cond_0
++    goto :next
++
++    :recurse_object
+     invoke-static {v1}, Lcom/rikkati/mod/Clean6MineFilter;->pruneObject(Lorg/json/JSONObject;)V
+-
+-    goto :goto_1
+-
+-    :cond_1
++    goto :next
++
++    :check_array
+     instance-of v2, v1, Lorg/json/JSONArray;
+-
+-    if-eqz v2, :cond_2
+-
++    if-eqz v2, :next
+     check-cast v1, Lorg/json/JSONArray;
+-
+     invoke-static {v1}, Lcom/rikkati/mod/Clean6MineFilter;->pruneArray(Lorg/json/JSONArray;)V
+
+-    :cond_2
+-    :goto_1
++    :next
+     add-int/lit8 v0, v0, -0x1
+-
+-    goto :goto_0
+-
+-    :cond_3
++    goto :loop
++
++    :done
+     return-void
+ .end method
+
+@@ -199,48 +248,32 @@
+     .locals 4
+
+     invoke-virtual {p0}, Lorg/json/JSONObject;->keys()Ljava/util/Iterator;
+-
+     move-result-object v0
+
+-    :cond_0
+-    :goto_0
++    :loop
+     invoke-interface {v0}, Ljava/util/Iterator;->hasNext()Z
+-
+     move-result v1
+-
+-    if-eqz v1, :cond_2
++    if-eqz v1, :done
+
+     invoke-interface {v0}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+-
+-    move-result-object v1
+-
++    move-result-object v1
+     check-cast v1, Ljava/lang/String;
+-
+     invoke-virtual {p0, v1}, Lorg/json/JSONObject;->opt(Ljava/lang/String;)Ljava/lang/Object;
+-
+     move-result-object v1
+
+     instance-of v2, v1, Lorg/json/JSONObject;
+-
+-    if-eqz v2, :cond_1
+-
++    if-eqz v2, :check_array
+     check-cast v1, Lorg/json/JSONObject;
+-
+     invoke-static {v1}, Lcom/rikkati/mod/Clean6MineFilter;->pruneObject(Lorg/json/JSONObject;)V
+-
+-    goto :goto_0
+-
+-    :cond_1
++    goto :loop
++
++    :check_array
+     instance-of v2, v1, Lorg/json/JSONArray;
+-
+-    if-eqz v2, :cond_0
+-
++    if-eqz v2, :loop
+     check-cast v1, Lorg/json/JSONArray;
+-
+     invoke-static {v1}, Lcom/rikkati/mod/Clean6MineFilter;->pruneArray(Lorg/json/JSONArray;)V
+-
+-    goto :goto_0
+-
+-    :cond_2
++    goto :loop
++
++    :done
+     return-void
+ .end method
+--- /dev/null
++++ b/smali_classes10/com/rikkati/mod/CleanHomeFilter.smali
+@@ -0,0 +1,73 @@
++.class public final Lcom/rikkati/mod/CleanHomeFilter;
++.super Ljava/lang/Object;
++.source "CleanHomeFilter.java"
++
++.method public static emptyResponse()[B
++    .locals 2
++
++    const-string v0, "{\"code\":\"1\",\"data\":{},\"result\":\"true\",\"success\":true,\"message\":\"Successful.\"}"
++
++    sget-object v1, Ljava/nio/charset/StandardCharsets;->UTF_8:Ljava/nio/charset/Charset;
++
++    invoke-virtual {v0, v1}, Ljava/lang/String;->getBytes(Ljava/nio/charset/Charset;)[B
++
++    move-result-object v0
++
++    return-object v0
++.end method
++
++.method public static filterScene([B)[B
++    .locals 6
++
++    if-eqz p0, :return_original
++
++    :try_start_0
++    sget-object v0, Ljava/nio/charset/StandardCharsets;->UTF_8:Ljava/nio/charset/Charset;
++
++    new-instance v1, Ljava/lang/String;
++
++    invoke-direct {v1, p0, v0}, Ljava/lang/String;-><init>([BLjava/nio/charset/Charset;)V
++
++    new-instance v2, Lorg/json/JSONObject;
++
++    invoke-direct {v2, v1}, Lorg/json/JSONObject;-><init>(Ljava/lang/String;)V
++
++    const-string v1, "data"
++
++    invoke-virtual {v2, v1}, Lorg/json/JSONObject;->optJSONObject(Ljava/lang/String;)Lorg/json/JSONObject;
++
++    move-result-object v3
++
++    if-eqz v3, :return_original
++
++    const-string v4, "toolsRecommend"
++
++    invoke-virtual {v3, v4}, Lorg/json/JSONObject;->opt(Ljava/lang/String;)Ljava/lang/Object;
++
++    move-result-object v3
++
++    new-instance v5, Lorg/json/JSONObject;
++
++    invoke-direct {v5}, Lorg/json/JSONObject;-><init>()V
++
++    if-eqz v3, :replace_data
++
++    invoke-virtual {v5, v4, v3}, Lorg/json/JSONObject;->put(Ljava/lang/String;Ljava/lang/Object;)Lorg/json/JSONObject;
++
++    :replace_data
++    invoke-virtual {v2, v1, v5}, Lorg/json/JSONObject;->put(Ljava/lang/String;Ljava/lang/Object;)Lorg/json/JSONObject;
++
++    invoke-virtual {v2}, Lorg/json/JSONObject;->toString()Ljava/lang/String;
++
++    move-result-object v1
++
++    invoke-virtual {v1, v0}, Ljava/lang/String;->getBytes(Ljava/nio/charset/Charset;)[B
++
++    move-result-object p0
++    :try_end_0
++    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
++
++    :catch_0
++    :return_original
++    return-object p0
++.end method
+--- /dev/null
++++ b/smali_classes10/com/rikkati/mod/CleanMessageFilter.smali
+@@ -0,0 +1,171 @@
++.class public final Lcom/rikkati/mod/CleanMessageFilter;
++.super Ljava/lang/Object;
++.source "CleanMessageFilter.java"
++
++.method private static isBlockedTitle(Ljava/lang/String;)Z
++    .locals 1
++
++    const-string v0, "超划算"
++    invoke-virtual {p0, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const-string v0, "借钱"
++    invoke-virtual {p0, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const-string v0, "活动"
++    invoke-virtual {p0, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const-string v0, "打卡消息"
++    invoke-virtual {p0, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const-string v0, "地点评论"
++    invoke-virtual {p0, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const-string v0, "真探"
++    invoke-virtual {p0, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const-string v0, "公共交通动态"
++    invoke-virtual {p0, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const-string v0, "高德运动"
++    invoke-virtual {p0, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const-string v0, "足迹动态"
++    invoke-virtual {p0, v0}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++    move-result v0
++    if-nez v0, :blocked
++
++    const/4 v0, 0x0
++    return v0
++
++    :blocked
++    const/4 v0, 0x1
++    return v0
++.end method
++
++.method public static filter([B)[B
++    .locals 8
++
++    if-eqz p0, :return_original
++
++    :try_start_0
++    sget-object v0, Ljava/nio/charset/StandardCharsets;->UTF_8:Ljava/nio/charset/Charset;
++
++    new-instance v1, Ljava/lang/String;
++
++    invoke-direct {v1, p0, v0}, Ljava/lang/String;-><init>([BLjava/nio/charset/Charset;)V
++
++    const-string v2, "\"dataList\""
++
++    invoke-virtual {v1, v2}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
++
++    move-result v2
++
++    if-eqz v2, :return_original
++
++    invoke-static {v1}, Lcom/rikkati/mod/CleanMessageFilter;->isBlockedTitle(Ljava/lang/String;)Z
++
++    move-result v2
++
++    if-eqz v2, :return_original
++
++    new-instance v2, Lorg/json/JSONObject;
++
++    invoke-direct {v2, v1}, Lorg/json/JSONObject;-><init>(Ljava/lang/String;)V
++
++    const-string v3, "data"
++
++    invoke-virtual {v2, v3}, Lorg/json/JSONObject;->optJSONObject(Ljava/lang/String;)Lorg/json/JSONObject;
++
++    move-result-object v3
++
++    if-eqz v3, :return_original
++
++    const-string v4, "dataList"
++
++    invoke-virtual {v3, v4}, Lorg/json/JSONObject;->optJSONArray(Ljava/lang/String;)Lorg/json/JSONArray;
++
++    move-result-object v4
++
++    if-eqz v4, :return_original
++
++    invoke-virtual {v4}, Lorg/json/JSONArray;->length()I
++
++    move-result v5
++
++    add-int/lit8 v5, v5, -0x1
++
++    :loop
++    if-ltz v5, :serialize
++
++    invoke-virtual {v4, v5}, Lorg/json/JSONArray;->optJSONObject(I)Lorg/json/JSONObject;
++
++    move-result-object v6
++
++    if-eqz v6, :next
++
++    const-string v7, "data"
++
++    invoke-virtual {v6, v7}, Lorg/json/JSONObject;->optJSONObject(Ljava/lang/String;)Lorg/json/JSONObject;
++
++    move-result-object v7
++
++    if-eqz v7, :next
++
++    const-string v1, "info"
++
++    invoke-virtual {v7, v1}, Lorg/json/JSONObject;->optJSONObject(Ljava/lang/String;)Lorg/json/JSONObject;
++
++    move-result-object v7
++
++    if-eqz v7, :next
++
++    const-string v1, "title"
++    const-string v3, ""
++
++    invoke-virtual {v7, v1, v3}, Lorg/json/JSONObject;->optString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
++
++    move-result-object v7
++
++    invoke-static {v7}, Lcom/rikkati/mod/CleanMessageFilter;->isBlockedTitle(Ljava/lang/String;)Z
++
++    move-result v7
++
++    if-eqz v7, :next
++
++    invoke-virtual {v4, v5}, Lorg/json/JSONArray;->remove(I)Ljava/lang/Object;
++
++    :next
++    add-int/lit8 v5, v5, -0x1
++    goto :loop
++
++    :serialize
++    invoke-virtual {v2}, Lorg/json/JSONObject;->toString()Ljava/lang/String;
++
++    move-result-object v1
++
++    invoke-virtual {v1, v0}, Ljava/lang/String;->getBytes(Ljava/nio/charset/Charset;)[B
++
++    move-result-object p0
++    :try_end_0
++    .catch Ljava/lang/Exception; {:try_start_0 .. :try_end_0} :catch_0
++
++    :catch_0
++    :return_original
++    return-object p0
++.end method
+--- a/smali_classes5/com/autonavi/bundle/amaphome/components/quickservice/QSScrollContainerV2.smali
++++ b/smali_classes5/com/autonavi/bundle/amaphome/components/quickservice/QSScrollContainerV2.smali
+@@ -35,7 +35,7 @@
+
+ # direct methods
+ .method public constructor <init>(Landroid/content/Context;)V
+-    .locals 1
++    .locals 3
+
+     .line 1
+     invoke-direct {p0, p1}, Lcom/amap/bundle/commonui/designtoken/view/viewgroup/DtFrameLayout;-><init>(Landroid/content/Context;)V
+@@ -93,7 +93,17 @@
+     const/4 v0, -0x1
+
+     .line 30
+-    invoke-direct {p1, v0, v0}, Landroid/widget/FrameLayout$LayoutParams;-><init>(II)V
++    invoke-virtual {p0}, Landroid/view/View;->getContext()Landroid/content/Context;
++
++    move-result-object v1
++
++    const/16 v2, 0xbc
++
++    invoke-static {v1, v2}, Lcom/autonavi/bundle/uitemplate/util/DimensUtil;->dp2px(Landroid/content/Context;I)I
++
++    move-result v1
++
++    invoke-direct {p1, v0, v1}, Landroid/widget/FrameLayout$LayoutParams;-><init>(II)V
+
+     .line 31
+     .line 32
+@@ -111,6 +121,14 @@
+
+     .line 39
+     .line 40
++    const/4 v0, 0x1
++
++    invoke-virtual {p1, v0}, Landroid/view/ViewGroup;->setClipChildren(Z)V
++
++    invoke-virtual {p1, v0}, Landroid/view/ViewGroup;->setClipToPadding(Z)V
++
++    invoke-virtual {p0, v0}, Landroid/view/ViewGroup;->setClipChildren(Z)V
++
+     invoke-virtual {p0, p1}, Landroid/view/ViewGroup;->addView(Landroid/view/View;)V
+
+     .line 41
