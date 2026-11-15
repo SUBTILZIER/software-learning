@@ -1,0 +1,4 @@
+interface:
+  display_name: "AMap APK Customization"
+  short_description: "Reverse, slim, package, and validate AMap APKs"
+  default_prompt: "Use $amap-apk-customization to analyze or customize an AMap APK, then package, test, verify, and provide rollback artifacts."
